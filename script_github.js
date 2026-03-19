@@ -1,0 +1,531 @@
+/* =============================================
+   GRUPO DUNORTE — script.js
+   ============================================= */
+
+(function () {
+  "use strict";
+
+  // ── Utilitários ────────────────────────────────────────────
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+  const fmt = {
+    preco(v) {
+      return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    },
+    parcela(v) {
+      // "ou 10x de R$ X,XX sem juros"
+      const val = Number(v || 0) / 10;
+      return `ou 10x de ${val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} sem juros`;
+    },
+    metros(cm) {
+      return (Number(cm || 0) / 100).toLocaleString("pt-BR", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      }) + " m";
+    },
+  };
+
+  // Garantia por categoria
+  function garantiaDe(categoria) {
+    const premium = ["Mesa Com Borda Requadrada", "Mesa Com Borda Orgânica", "Mesa Cascata", "Mesa Redonda"];
+    if (premium.includes(categoria)) return "1 ano de garantia";
+    return "90 dias contra defeitos de fabricação";
+  }
+
+  // ── Estado ────────────────────────────────────────────────
+  let todosOsProdutos = [];
+  let imagensModal = [];
+  let indiceAtual = 0;
+  let descExpanded = false;
+
+  // Cache de verificação de imagens (pasta => true/false)
+  const cacheImagem = {};
+
+  // ── Elementos ─────────────────────────────────────────────
+  const listaProdutos   = $("#listaProdutos");
+  const contador        = $("#contadorProdutos");
+  const modal           = $("#modalProduto");
+  const modalOverlay    = $("#modalOverlay");
+  const modalConteudo   = $("#modalConteudo");
+  const fecharModal     = $("#fecharModal");
+  const buscaNome       = $("#buscaNome");
+  const ordenarProdutos = $("#ordenarProdutos");
+  const filtroPromo     = $("#filtroPromo");
+
+  // ── Sidebar toggle (mobile) ───────────────────────────────
+  window.toggleSidebar = function () {
+    $("#sidebar").classList.toggle("visivel");
+  };
+
+  // ── Verifica se produto tem foto ──────────────────────────
+  function verificarImagem(pasta) {
+    return new Promise((resolve) => {
+      if (cacheImagem[pasta] !== undefined) { resolve(cacheImagem[pasta]); return; }
+      const img = new Image();
+      img.onload  = () => { cacheImagem[pasta] = true;  resolve(true); };
+      img.onerror = () => { cacheImagem[pasta] = false; resolve(false); };
+      img.src = `assets/img/${pasta}/1.jpg`;
+    });
+  }
+
+  // ── Configuração GitHub Pages ─────────────────────────────
+  // URL do produtos.json no seu repositório GitHub
+  // Troque SEU_USUARIO pelo seu nome de usuário do GitHub
+  const URL_PRODUTOS = "https://dunortepatos.github.io/catalogo-dunorte/produtos.json";
+
+  // ── Carregar produtos ─────────────────────────────────────
+  async function init() {
+    try {
+      // Adiciona timestamp para evitar cache do navegador
+      const r = await fetch(URL_PRODUTOS + "?v=" + Date.now());
+      if (!r.ok) throw new Error("Erro ao carregar produtos");
+      todosOsProdutos = await r.json();
+      if (!Array.isArray(todosOsProdutos)) todosOsProdutos = [];
+    } catch (e) {
+      console.error("Não foi possível carregar produtos:", e);
+      todosOsProdutos = [];
+    }
+
+    // Verifica imagens em paralelo e armazena em cache
+    await Promise.all(todosOsProdutos.map((p) => verificarImagem(p.pasta)));
+
+    construirFiltros();
+    renderizar();
+  }
+
+  // ── Construir filtros dinâmicos ────────────────────────────
+  function construirFiltros() {
+    // Categoria e Madeira: simples
+    [
+      { el: "#filtroCategoria", chave: "categoria" },
+      { el: "#filtroMadeira",   chave: "madeira" },
+    ].forEach(({ el, chave }) => {
+      const container = $(el);
+      if (!container) return;
+      const vals = [...new Set(todosOsProdutos.map((p) => p[chave]).filter(Boolean))].sort();
+      container.innerHTML = vals.map((v) => `
+        <label class="check-item">
+          <input type="checkbox" data-chave="${chave}" value="${v}">
+          <span class="check-box"></span>
+          <span>${v}</span>
+        </label>`).join("");
+    });
+
+    // Tipo de pé: agrupado por material, expansível
+    const containerPe = $("#filtroTipoPe");
+    if (containerPe) {
+      const todosPes = [...new Set(todosOsProdutos.map((p) => p.tipoPe).filter(Boolean))].sort();
+
+      // Agrupa por material principal
+      // Valores legados "Metal" e "Madeira" entram como subcategoria dentro do seu grupo
+      const grupos = {};
+      todosPes.forEach((v) => {
+        let mat;
+        if (v === "Metal" || v.startsWith("Metal"))    mat = "Metal";
+        else if (v === "Madeira" || v.startsWith("Madeira")) mat = "Madeira";
+        else mat = v; // Alumínio, outros
+        if (!grupos[mat]) grupos[mat] = [];
+        grupos[mat].push(v);
+      });
+
+      // Função que extrai o label de exibição de cada valor
+      function labelModelo(v) {
+        // Tenta separar pelo travessão — ou pelo hífen com espaço
+        const idx = v.indexOf(" — ");
+        if (idx !== -1) return v.slice(idx + 3); // pega depois do " — "
+        const idx2 = v.indexOf(" - ");
+        if (idx2 !== -1) return v.slice(idx2 + 3);
+        // Sem separador: é o valor puro como "Metal" ou "Madeira" — exibe como "Padrão"
+        return v;
+      }
+
+      let html = "";
+      Object.entries(grupos).forEach(([material, subs]) => {
+
+        // Alumínio ou qualquer grupo com 1 item cujo valor == material exato:
+        // mostra como checkbox simples sem expansão
+        if (subs.length === 1 && subs[0] === material) {
+          html += `
+            <label class="check-item">
+              <input type="checkbox" data-chave="tipoPe" value="${subs[0]}">
+              <span class="check-box"></span>
+              <span>${material}</span>
+            </label>`;
+          return;
+        }
+
+        // Tem subcategorias → grupo expansível
+        const subsHTML = subs.map((v) => {
+          const label = labelModelo(v);
+          return `
+            <label class="pe-sub">
+              <input type="checkbox" data-chave="tipoPe" value="${v}">
+              <span class="pe-check-box"></span>
+              <span class="pe-sub-label">${label}</span>
+            </label>`;
+        }).join("");
+
+        html += `
+          <div class="pe-grupo">
+            <button type="button" class="pe-principal" data-material="${material}">
+              <span>${material}</span>
+              <span class="pe-seta">&#9654;</span>
+            </button>
+            <div class="pe-subs" id="peSubs_${material}">
+              ${subsHTML}
+            </div>
+          </div>`;
+      });
+
+      containerPe.innerHTML = html;
+
+      // Toggle ao clicar no botão principal
+      containerPe.querySelectorAll(".pe-principal").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const mat  = btn.getAttribute("data-material");
+          const subsDiv = document.getElementById("peSubs_" + mat);
+          const seta = btn.querySelector(".pe-seta");
+          if (!subsDiv) return;
+          const abrindo = !subsDiv.classList.contains("visivel");
+          subsDiv.classList.toggle("visivel", abrindo);
+          if (seta) seta.style.transform = abrindo ? "rotate(90deg)" : "";
+        });
+      });
+
+      // Checkboxes das subcategorias disparam renderizar
+      containerPe.querySelectorAll(".pe-sub input[type=checkbox]").forEach((cb) => {
+        cb.addEventListener("change", renderizar);
+      });
+    }
+
+    // Eventos nos checks de categoria e madeira
+    $$("#filtroCategoria input, #filtroMadeira input").forEach((cb) => {
+      cb.addEventListener("change", renderizar);
+    });
+  }
+
+  // ── Obter filtros ativos ───────────────────────────────────
+  function getChecks(chave) {
+    return $$(`input[data-chave="${chave}"]:checked`).map((cb) => cb.value);
+  }
+
+  // ── Filtrar ────────────────────────────────────────────────
+  function filtrarProdutos() {
+    const busca      = (buscaNome?.value || "").trim().toLowerCase();
+    const categorias = getChecks("categoria");
+    const madeiras   = getChecks("madeira");
+    const pes        = getChecks("tipoPe");
+    const soPromo    = filtroPromo?.checked;
+
+    const pMin = Number($("#precoMin")?.value || 0);
+    const pMax = Number($("#precoMax")?.value || 0);
+    const cMin = Number($("#comprimentoMin")?.value || 0);
+    const cMax = Number($("#comprimentoMax")?.value || 0);
+    const lMin = Number($("#larguraMin")?.value || 0);
+    const lMax = Number($("#larguraMax")?.value || 0);
+    const eMin = Number($("#espessuraMin")?.value || 0);
+    const eMax = Number($("#espessuraMax")?.value || 0);
+
+    return todosOsProdutos.filter((p) => {
+      if (busca) {
+        const h = `${p.nome} ${p.codigo} ${p.madeira} ${p.categoria} ${p.descricao || ""}`.toLowerCase();
+        if (!h.includes(busca)) return false;
+      }
+      if (categorias.length && !categorias.includes(p.categoria)) return false;
+      if (madeiras.length   && !madeiras.includes(p.madeira))     return false;
+      if (pes.length        && !pes.includes(p.tipoPe))           return false;
+      if (soPromo           && !p.promocao)                        return false;
+
+      const pe = p.promocao || p.preco;
+      if (pMin && pe < pMin) return false;
+      if (pMax && pe > pMax) return false;
+      if (cMin && p.comprimento < cMin) return false;
+      if (cMax && p.comprimento > cMax) return false;
+      if (lMin && p.largura < lMin) return false;
+      if (lMax && p.largura > lMax) return false;
+      if (eMin && p.espessura < eMin) return false;
+      if (eMax && p.espessura > eMax) return false;
+
+      return true;
+    });
+  }
+
+  // ── Ordenar (com foto primeiro) ────────────────────────────
+  function ordenar(lista) {
+    const modo = ordenarProdutos?.value || "recentes";
+
+    // Separa com foto e sem foto
+    const comFoto  = lista.filter((p) => cacheImagem[p.pasta] === true);
+    const semFoto  = lista.filter((p) => cacheImagem[p.pasta] !== true);
+
+    function sortFn(a, b) {
+      if (modo === "recentes")    return Number(b.id) - Number(a.id);
+      if (modo === "preco-menor") return (a.promocao || a.preco) - (b.promocao || b.preco);
+      if (modo === "preco-maior") return (b.promocao || b.preco) - (a.promocao || a.preco);
+      if (modo === "promo") {
+        const da = a.promocao ? a.preco - a.promocao : 0;
+        const db = b.promocao ? b.preco - b.promocao : 0;
+        return db - da;
+      }
+      return 0;
+    }
+
+    // Dentro de cada grupo, ordena aleatoriamente quando modo = "recentes"
+    // (mantém id desc como critério secundário estável, mas embaralha ligeiramente)
+    // Conforme solicitado: com foto aparece em ordem aleatória, sem foto vai por último
+    if (modo === "recentes") {
+      // Aleatoriza os com foto
+      const shuffled = comFoto.sort(() => 0.5 - Math.random());
+      return [...shuffled, ...semFoto];
+    }
+
+    return [...comFoto.sort(sortFn), ...semFoto.sort(sortFn)];
+  }
+
+  // ── Render cards ───────────────────────────────────────────
+  function renderizar() {
+    const lista = ordenar(filtrarProdutos());
+    contador.textContent = `${lista.length} produto${lista.length !== 1 ? "s" : ""}`;
+
+    if (!lista.length) {
+      listaProdutos.innerHTML = `
+        <div class="sem-resultados">
+          <p>Nenhum produto encontrado</p>
+          <p style="font-size:14px;">Tente ajustar os filtros.</p>
+        </div>`;
+      return;
+    }
+
+    listaProdutos.innerHTML = lista.map(cardHTML).join("");
+
+    $$(".card").forEach((card, i) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.tagName === "A") return;
+        abrirModal(lista[i]);
+      });
+    });
+  }
+
+  function cardHTML(p) {
+    const img = `assets/img/${p.pasta}/1.jpg`;
+    const temPromo = p.promocao && p.promocao < p.preco;
+    const precoExibido = temPromo ? p.promocao : p.preco;
+    const wppTxt = encodeURIComponent(
+      `Olá! Tenho interesse na mesa *${p.nome}* (Cod. ${p.codigo}). Poderia me informar mais detalhes?`
+    );
+    const wppLink = `https://wa.me/553497724000?text=${wppTxt}`;
+
+    return `
+      <article class="card">
+        <div class="card-img-wrap">
+          ${temPromo ? `<span class="badge-oferta">Oferta</span>` : ""}
+          <img src="${img}" alt="${p.nome}" loading="lazy"
+            onerror="this.parentElement.style.background='#f0ead9'; this.style.display='none'">
+        </div>
+        <div class="card-body">
+          <div class="card-madeira">${p.madeira}</div>
+          <div class="card-nome">${p.nome}</div>
+          <div class="card-specs">${p.comprimento} × ${p.largura} cm &bull; ${p.espessura} cm &bull; Pé ${p.tipoPe}</div>
+          <div class="card-preco-bloco">
+            ${temPromo ? `<div class="card-preco-antigo">${fmt.preco(p.preco)}</div>` : ""}
+            <div class="card-preco-atual${temPromo ? " promo" : ""}">${fmt.preco(precoExibido)}</div>
+            <div class="card-parcela">${fmt.parcela(precoExibido)}</div>
+          </div>
+          <div class="card-acoes">
+            <a href="${wppLink}" target="_blank" class="btn-wpp" onclick="event.stopPropagation()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              WhatsApp
+            </a>
+            <button class="btn-ver">Ver detalhes</button>
+          </div>
+        </div>
+      </article>`;
+  }
+
+  // ── Modal ──────────────────────────────────────────────────
+  function abrirModal(p) {
+    descExpanded = false;
+    imagensModal = [];
+    indiceAtual = 0;
+
+    const promises = [];
+    for (let i = 1; i <= 20; i++) {
+      const src = `assets/img/${p.pasta}/${i}.jpg`;
+      promises.push(new Promise((res) => {
+        const img = new Image();
+        img.onload  = () => { imagensModal.push(src); res(); };
+        img.onerror = () => res();
+        img.src = src;
+      }));
+    }
+
+    Promise.all(promises).then(() => {
+      imagensModal.sort((a, b) => {
+        const na = parseInt(a.match(/\/(\d+)\.jpg/)?.[1] || 0);
+        const nb = parseInt(b.match(/\/(\d+)\.jpg/)?.[1] || 0);
+        return na - nb;
+      });
+      renderModal(p);
+    });
+
+    renderModal(p, true);
+    modal.classList.add("aberto");
+    document.body.style.overflow = "hidden";
+  }
+
+  function renderModal(p) {
+    const temPromo = p.promocao && p.promocao < p.preco;
+    const precoFinal = temPromo ? p.promocao : p.preco;
+    const wppTxt = encodeURIComponent(
+      `Olá! Tenho interesse na mesa *${p.nome}* (Cod. ${p.codigo}). Poderia me passar mais detalhes?`
+    );
+    const wppLink = `https://wa.me/553497724000?text=${wppTxt}`;
+    const srcAtual = imagensModal[indiceAtual] || `assets/img/${p.pasta}/1.jpg`;
+    const garantia = garantiaDe(p.categoria);
+
+    modalConteudo.innerHTML = `
+      <div class="modal-grid">
+        <div class="modal-galeria">
+          <div class="modal-img-principal">
+            <img id="modalImgPrinc" src="${srcAtual}" alt="${p.nome}"
+              onerror="this.parentElement.style.background='#f0ead9'; this.style.display='none'">
+            ${imagensModal.length > 1 ? `
+              <button class="seta-gal seta-ant" id="setaAnt">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <button class="seta-gal seta-prox" id="setaProx">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>` : ""}
+          </div>
+          ${imagensModal.length > 1 ? `
+            <div class="modal-miniaturas">
+              ${imagensModal.map((src, i) => `
+                <button class="min-btn${i === indiceAtual ? " ativa" : ""}" data-i="${i}">
+                  <img src="${src}" alt="Foto ${i+1}">
+                </button>`).join("")}
+            </div>` : ""}
+        </div>
+
+        <div class="modal-info">
+          <div class="modal-categoria">${p.categoria}</div>
+          <h2 class="modal-nome">${p.nome}</h2>
+          <div class="modal-cod">Cód. ${p.codigo}</div>
+
+          <div class="modal-divider"></div>
+
+          <div class="specs-grid">
+            <div class="spec-item">
+              <div class="spec-label">Comprimento</div>
+              <div class="spec-val">${fmt.metros(p.comprimento)}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Largura</div>
+              <div class="spec-val">${p.largura} cm</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Espessura</div>
+              <div class="spec-val">${p.espessura} cm</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Pé</div>
+              <div class="spec-val">${p.tipoPe}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Madeira</div>
+              <div class="spec-val">${p.madeira}</div>
+            </div>
+            <div class="spec-item spec-garantia">
+              <div class="spec-label">Garantia</div>
+              <div class="spec-val">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                ${garantia}
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-divider"></div>
+
+          <div class="modal-preco-wrap">
+            ${temPromo ? `<div class="modal-preco-antigo">${fmt.preco(p.preco)}</div>` : ""}
+            <div class="modal-preco">${fmt.preco(precoFinal)}</div>
+            <div class="modal-parcela">${fmt.parcela(precoFinal)}</div>
+          </div>
+
+          ${p.descricao ? `
+            <button class="modal-desc-toggle" id="toggleDesc">
+              Detalhes completos
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="toggleIcon"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="modal-desc" id="modalDesc" style="display:none">${p.descricao}</div>
+          ` : ""}
+
+          <div class="modal-acoes">
+            <a href="${wppLink}" target="_blank" class="modal-btn-wpp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Falar pelo WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>`;
+
+    const setaAnt  = $("#setaAnt");
+    const setaProx = $("#setaProx");
+    if (setaAnt)  setaAnt.addEventListener("click",  () => navegarGaleria(-1, p));
+    if (setaProx) setaProx.addEventListener("click", () => navegarGaleria(1, p));
+
+    $$(".min-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        indiceAtual = Number(btn.dataset.i);
+        renderModal(p);
+      });
+    });
+
+    const toggleBtn  = $("#toggleDesc");
+    const modalDesc  = $("#modalDesc");
+    const toggleIcon = $("#toggleIcon");
+    if (toggleBtn && modalDesc) {
+      toggleBtn.addEventListener("click", () => {
+        descExpanded = !descExpanded;
+        modalDesc.style.display = descExpanded ? "block" : "none";
+        if (toggleIcon) toggleIcon.style.transform = descExpanded ? "rotate(180deg)" : "";
+      });
+    }
+  }
+
+  function navegarGaleria(dir, p) {
+    indiceAtual = (indiceAtual + dir + imagensModal.length) % imagensModal.length;
+    renderModal(p);
+  }
+
+  function fecharModalFn() {
+    modal.classList.remove("aberto");
+    document.body.style.overflow = "";
+  }
+
+  fecharModal?.addEventListener("click", fecharModalFn);
+  modalOverlay?.addEventListener("click", fecharModalFn);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharModalFn(); });
+
+  $("#btnLimparFiltros")?.addEventListener("click", () => {
+    $$("input[type=checkbox]").forEach((cb) => (cb.checked = false));
+    $$("input[type=number]").forEach((i) => (i.value = ""));
+    if (buscaNome) buscaNome.value = "";
+    // Fecha todos os grupos de pé
+    $$(".pe-subs").forEach((s) => s.classList.remove("visivel"));
+    $$(".pe-seta").forEach((s) => s.classList.remove("aberto"));
+    renderizar();
+  });
+
+  [buscaNome, filtroPromo, ordenarProdutos,
+   $("#precoMin"), $("#precoMax"),
+   $("#comprimentoMin"), $("#comprimentoMax"),
+   $("#larguraMin"), $("#larguraMax"),
+   $("#espessuraMin"), $("#espessuraMax"),
+  ].forEach((el) => {
+    if (el) el.addEventListener("input",  renderizar);
+    if (el) el.addEventListener("change", renderizar);
+  });
+
+  init();
+})();

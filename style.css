@@ -1,6 +1,6 @@
 /* =============================================
    GRUPO DUNORTE — CSS
-   Fonte: Questrial + Playfair Display
+   Fonte: Calibri (sistema) + Playfair Display
    ============================================= */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,13 +22,12 @@
   --verde-w:     #25d366;
   --verde-badge: #00e64d;
 
-  --grad-cab:  linear-gradient(160deg, #c49050 0%, #e8b96a 30%, #f5d08a 55%, #dba855 80%, #c49050 100%);
+  --grad-cab:  linear-gradient(160deg, #1a0e04 0%, #3d2008 30%, #5a3010 55%, #3a2008 80%, #1a0d03 100%);
   --grad-ouro: linear-gradient(90deg, transparent 0%, #f0c060 30%, #ffe08a 50%, #f0c060 70%, transparent 100%);
   --grad-card: linear-gradient(160deg, #fdfaf6 0%, #f5ede2 100%);
   --grad-bege: linear-gradient(160deg, #f7f2eb 0%, #ede4d8 100%);
   --grad-topo: linear-gradient(135deg, #1a0e04 0%, #3d2008 60%, #1a0d03 100%);
 
-  /* Cantos menos arredondados */
   --raio:   8px;
   --raio2:  13px;
   --raio3:  20px;
@@ -39,12 +38,15 @@
   --s4: 0 28px 72px rgba(46,30,10,.22);
 
   --t: .2s ease;
+
+  /* Fonte principal — Calibri nativa, fallbacks seguros */
+  --fonte: Calibri, 'Gill Sans MT', 'Trebuchet MS', Arial, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Questrial', Arial, sans-serif;
+  font-family: var(--fonte);
   background: var(--bg);
   color: var(--texto);
   font-size: 15px;
@@ -57,68 +59,84 @@ body {
 ═══════════════════════════════════════ */
 .cabecalho {
   position: relative;
-  background: linear-gradient(150deg, #f5d48a 0%, #e8b55a 25%, #d49a3a 55%, #c48830 80%, #b87820 100%);
+  background: var(--grad-cab);
   overflow: hidden;
   padding: 0;
-  border-bottom: 2px solid rgba(160,100,20,.18);
+  border-bottom: 2px solid rgba(240,192,96,.18);
 }
 
-/* Camada de suavização/profundidade */
+/* Textura de veios de madeira — discreta */
 .cab-bg-layer1 {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 80% at 50% 0%,  rgba(255,240,180,.35) 0%, transparent 65%),
-    radial-gradient(ellipse 30% 50% at 0%   50%, rgba(140,80,10,.20)  0%, transparent 60%),
-    radial-gradient(ellipse 30% 50% at 100% 50%, rgba(140,80,10,.20)  0%, transparent 60%);
+    repeating-linear-gradient(
+      100deg,
+      transparent 0px,
+      rgba(255,200,100,.025) 1px,
+      transparent 2px,
+      transparent 18px,
+      rgba(200,140,60,.03) 19px,
+      transparent 20px,
+      transparent 38px
+    ),
+    repeating-linear-gradient(
+      98deg,
+      transparent 0px,
+      rgba(180,100,30,.02) 1px,
+      transparent 3px,
+      transparent 55px
+    ),
+    radial-gradient(ellipse 90% 100% at 50% -5%, rgba(200,149,58,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 70% at 5%  50%, rgba(60,25,5,.55)    0%, transparent 55%),
+    radial-gradient(ellipse 35% 70% at 95% 50%, rgba(60,25,5,.55)    0%, transparent 55%);
 }
 
 .cab-bg-layer2 {
   position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 50% 30% at 50% 100%, rgba(120,60,0,.12) 0%, transparent 70%);
+  background: radial-gradient(ellipse 55% 35% at 50% 0%, rgba(255,224,140,.07) 0%, transparent 65%);
 }
 
 .cab-grain {
-  position: absolute; inset: 0; pointer-events: none; opacity: .035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-size: 180px;
+  position: absolute; inset: 0; pointer-events: none; opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
 }
 
 /* ── Layout interno ── */
 .cab-inner {
   position: relative; z-index: 2;
   max-width: 1400px; margin: 0 auto;
-  padding: 22px 28px 20px;
+  padding: 20px 32px 18px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
 }
 
-/* ── Logo — sem bolinha, diretamente ── */
-.cab-logo-wrap { perspective: 600px; }
+/* ── Logo — sem bolinha ── */
+.cab-logo-wrap { perspective: 600px; flex-shrink: 0; }
 
 .cab-logo-3d {
   position: relative;
-  width: 110px; height: 110px;
+  width: 100px; height: 100px;
   transform-style: preserve-3d;
-  transform: rotateY(-4deg) rotateX(2deg);
+  transform: rotateY(-5deg) rotateX(2deg);
   transition: transform .5s ease;
 }
 .cab-logo-3d:hover { transform: rotateY(0deg) rotateX(0deg); }
 
 .cab-logo-circulo {
-  width: 110px; height: 110px;
-  border-radius: 12px;
+  width: 100px; height: 100px;
+  border-radius: 10px;
   background: transparent;
   display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .cab-logo-img {
-  width: 110px; height: 110px;
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 3px 10px rgba(80,40,0,.35));
+  width: 100px; height: 100px;
+  object-fit: contain; display: block;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.55)) drop-shadow(0 0 1px rgba(240,192,96,.3));
 }
 
 .cab-logo-reflexo { display: none; }
@@ -130,35 +148,38 @@ body {
 }
 
 .cab-titulo {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(28px, 4vw, 52px);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(28px, 3.8vw, 52px);
   font-weight: 900;
   line-height: 1;
   letter-spacing: .03em;
-  color: #3a1f00;
-  text-shadow:
-    0 1px 0 rgba(255,220,120,.7),
-    0 3px 10px rgba(100,50,0,.25);
+  background: linear-gradient(180deg, #ffe8a0 0%, #f0c060 35%, #c8953a 65%, #ffe8a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 1px rgba(60,25,0,.9)) drop-shadow(0 4px 10px rgba(0,0,0,.5));
 }
 
 .cab-subtitulo {
-  font-family: 'Questrial', sans-serif;
-  font-size: clamp(11px, 1.4vw, 15px);
-  letter-spacing: .26em;
+  font-family: var(--fonte);
+  font-size: clamp(10px, 1.3vw, 14px);
+  letter-spacing: .3em;
   text-transform: uppercase;
-  color: rgba(80,40,0,.6);
+  color: rgba(240,192,96,.55);
 }
 
 .cab-linha-ouro {
-  width: 120px; height: 1.5px;
-  background: linear-gradient(90deg, transparent 0%, rgba(100,50,0,.4) 30%, rgba(100,50,0,.6) 50%, rgba(100,50,0,.4) 70%, transparent 100%);
+  width: 130px; height: 1px;
+  background: var(--grad-ouro);
   border-radius: 999px;
-  margin: 2px auto;
+  margin: 3px auto;
+  opacity: .7;
 }
 
 .cab-slogan {
-  font-size: clamp(11px, 1.2vw, 13px);
-  color: rgba(60,30,0,.55);
+  font-family: var(--fonte);
+  font-size: clamp(11px, 1.1vw, 13px);
+  color: rgba(255,255,255,.28);
   letter-spacing: .02em;
   font-style: italic;
   max-width: 400px;
@@ -172,18 +193,18 @@ body {
 
 .cab-tel {
   display: flex; align-items: center; gap: 7px;
-  color: rgba(60,30,0,.6); text-decoration: none;
-  font-size: 13px; transition: color var(--t);
+  color: rgba(255,255,255,.42); text-decoration: none;
+  font-family: var(--fonte); font-size: 13px; transition: color var(--t);
 }
-.cab-tel:hover { color: #3a1f00; }
+.cab-tel:hover { color: rgba(255,255,255,.8); }
 
 .cab-wpp {
-  display: flex; align-items: center; gap: 7px;
+  display: flex; align-items: center; gap: 8px;
   background: var(--verde-w); color: #fff; text-decoration: none;
-  padding: 9px 20px; border-radius: var(--raio);
-  font-size: 13.5px; font-weight: 600;
+  padding: 10px 20px; border-radius: var(--raio);
+  font-family: var(--fonte); font-size: 14px; font-weight: 700;
   transition: opacity var(--t), transform var(--t);
-  box-shadow: 0 4px 16px rgba(37,211,102,.35);
+  box-shadow: 0 4px 16px rgba(37,211,102,.3);
   white-space: nowrap;
 }
 .cab-wpp:hover { opacity: .9; transform: translateY(-1px); }
@@ -225,7 +246,7 @@ body {
 .btn-limpar-filtros {
   font-size: 12px; color: var(--muted);
   background: none; border: none; cursor: pointer; padding: 0;
-  font-family: 'Questrial', sans-serif; transition: color var(--t);
+  font-family: var(--fonte); transition: color var(--t);
   width: auto; height: auto;
 }
 .btn-limpar-filtros:hover { color: var(--marrom2); text-decoration: underline; }
@@ -280,7 +301,7 @@ body {
   cursor: pointer; user-select: none;
   transition: background var(--t), color var(--t);
   border: none; background: none; width: 100%;
-  font-family: 'Questrial', sans-serif; text-align: left;
+  font-family: var(--fonte); text-align: left;
 }
 .pe-principal:hover { background: var(--bg2); color: var(--texto); }
 .pe-principal.tem-selecionado { color: var(--marrom2); font-weight: 600; }
@@ -335,7 +356,7 @@ body {
   width: 100%; height: 40px;
   border: 1.5px solid var(--bege); border-radius: var(--raio);
   background: var(--bg2); padding: 0 13px;
-  font-size: 14px; font-family: 'Questrial', sans-serif; color: var(--texto);
+  font-size: 14px; font-family: var(--fonte); color: var(--texto);
   transition: border-color var(--t), box-shadow var(--t), background var(--t); outline: none;
 }
 .input-busca:focus {
@@ -350,10 +371,38 @@ body {
   flex: 1; height: 36px;
   border: 1.5px solid var(--bege); border-radius: var(--raio);
   background: var(--bg2); padding: 0 9px;
-  font-size: 13px; font-family: 'Questrial', sans-serif; color: var(--texto);
+  font-size: 13px; font-family: var(--fonte); color: var(--texto);
   width: auto; outline: none; transition: border-color var(--t);
 }
 .range-duplo input:focus { border-color: var(--marrom2); background: var(--branco); }
+
+/* ═══════════════════════════════════════
+   BARRA DE BUSCA PRINCIPAL (acima dos cards)
+═══════════════════════════════════════ */
+.busca-principal-wrap {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.busca-principal {
+  width: 100%; height: 44px;
+  border: 1.5px solid var(--bege);
+  border-radius: var(--raio2);
+  background: var(--branco);
+  padding: 0 16px 0 42px;
+  font-size: 15px; font-family: var(--fonte); color: var(--texto);
+  transition: border-color var(--t), box-shadow var(--t);
+  outline: none;
+  box-shadow: var(--s1);
+}
+.busca-principal:focus {
+  border-color: var(--marrom2);
+  box-shadow: 0 0 0 3px rgba(140,101,53,.10);
+}
+.busca-principal-icone {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none;
+}
 
 /* ═══════════════════════════════════════
    BARRA TOPO
@@ -369,7 +418,7 @@ body {
   height: 36px; padding: 0 13px;
   background: var(--branco); border: 1.5px solid var(--bege);
   border-radius: var(--raio); font-size: 13px;
-  font-family: 'Questrial', sans-serif; color: var(--texto);
+  font-family: var(--fonte); color: var(--texto);
   cursor: pointer; transition: all var(--t); width: auto;
 }
 .btn-toggle-filtros:hover { border-color: var(--marrom2); }
@@ -380,7 +429,7 @@ body {
 .select-ordenar {
   height: 36px; border: 1.5px solid var(--bege); border-radius: var(--raio);
   background: var(--branco); padding: 0 30px 0 11px;
-  font-size: 13px; font-family: 'Questrial', sans-serif; color: var(--texto);
+  font-size: 13px; font-family: var(--fonte); color: var(--texto);
   outline: none; cursor: pointer; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a57' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
@@ -465,7 +514,7 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 7px;
   height: 40px; border-radius: var(--raio);
   background: var(--verde-w); color: #fff; text-decoration: none;
-  font-size: 13.5px; font-family: 'Questrial', sans-serif;
+  font-size: 13.5px; font-family: var(--fonte);
   transition: opacity var(--t), transform var(--t);
 }
 .btn-wpp:hover { opacity: .88; transform: translateY(-1px); }
@@ -475,7 +524,7 @@ body {
   height: 40px; border-radius: var(--raio);
   background: var(--grad-bege); color: var(--marrom3);
   border: 1px solid var(--bege); font-size: 13.5px;
-  font-family: 'Questrial', sans-serif; cursor: pointer;
+  font-family: var(--fonte); cursor: pointer;
   transition: all var(--t); width: 100%; text-decoration: none;
 }
 .btn-ver:hover { background: var(--bege); color: var(--marrom4); }
@@ -595,7 +644,7 @@ body {
   font-size: 12px; font-weight: 700; color: var(--marrom2);
   letter-spacing: .08em; text-transform: uppercase;
   cursor: pointer; background: none; border: none; padding: 0;
-  font-family: 'Questrial', sans-serif;
+  font-family: var(--fonte);
   display: flex; align-items: center; gap: 6px;
   margin-bottom: 9px; transition: color var(--t);
   width: auto; height: auto;
@@ -603,12 +652,17 @@ body {
 .modal-desc-toggle:hover { color: var(--marrom3); }
 
 .modal-desc {
-  font-size: 13px; color: var(--suave); line-height: 1.8; white-space: pre-line;
-  max-height: 200px; overflow-y: auto; scrollbar-width: thin;
+  font-size: 13.5px; color: var(--suave); line-height: 1.8;
+  max-height: 260px; overflow-y: auto; scrollbar-width: thin;
   background: linear-gradient(160deg, #faf6f0 0%, #f2ead9 100%);
-  border-radius: var(--raio); padding: 12px;
+  border-radius: var(--raio); padding: 14px 16px;
   border: 1px solid var(--bege); margin-bottom: 18px;
 }
+.modal-desc p  { margin-bottom: 8px; }
+.modal-desc ul { padding-left: 18px; margin-bottom: 8px; }
+.modal-desc li { margin-bottom: 4px; }
+.modal-desc strong { color: var(--texto); font-weight: 700; }
+.modal-desc em { font-style: italic; color: var(--suave); }
 
 .modal-acoes { display: flex; flex-direction: column; gap: 8px; }
 
@@ -616,7 +670,7 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   height: 48px; border-radius: var(--raio);
   background: var(--verde-w); color: #fff; text-decoration: none;
-  font-size: 15px; font-family: 'Questrial', sans-serif;
+  font-size: 15px; font-family: var(--fonte);
   transition: opacity var(--t);
 }
 .modal-btn-wpp:hover { opacity: .88; }
@@ -663,20 +717,20 @@ body {
     grid-template-rows: auto auto auto;
     justify-items: center;
     text-align: center;
-    gap: 12px;
-    padding: 20px 16px 18px;
+    gap: 10px;
+    padding: 18px 16px 16px;
   }
   .cab-logo-wrap { order: 1; }
   .cab-centro    { order: 2; width: 100%; }
   .cab-contato   { order: 3; flex-direction: row; align-items: center; justify-content: center; width: 100%; }
-  .cab-logo-3d   { width: 80px; height: 80px; }
-  .cab-logo-circulo { width: 80px; height: 80px; }
-  .cab-logo-img  { width: 80px; height: 80px; }
-  .cab-titulo    { font-size: 32px; }
-  .cab-subtitulo { font-size: 11px; letter-spacing: .2em; }
-  .cab-slogan    { font-size: 12px; }
+  .cab-logo-3d   { width: 78px; height: 78px; }
+  .cab-logo-circulo { width: 78px; height: 78px; }
+  .cab-logo-img  { width: 78px; height: 78px; }
+  .cab-titulo    { font-size: 30px; }
+  .cab-subtitulo { font-size: 10px; letter-spacing: .2em; }
+  .cab-slogan    { font-size: 11.5px; }
   .cab-tel       { display: none; }
-  .cab-linha-ouro { width: 90px; }
+  .cab-linha-ouro { width: 80px; }
 }
 
 @media (max-width: 600px) {

@@ -22,7 +22,7 @@
   --verde-w:     #25d366;
   --verde-badge: #00e64d;
 
-  --grad-cab:  linear-gradient(160deg, #1a0e04 0%, #3d2008 30%, #5a3010 55%, #3a2008 80%, #1a0d03 100%);
+  --grad-cab:  linear-gradient(160deg, #c49050 0%, #e8b96a 30%, #f5d08a 55%, #dba855 80%, #c49050 100%);
   --grad-ouro: linear-gradient(90deg, transparent 0%, #f0c060 30%, #ffe08a 50%, #f0c060 70%, transparent 100%);
   --grad-card: linear-gradient(160deg, #fdfaf6 0%, #f5ede2 100%);
   --grad-bege: linear-gradient(160deg, #f7f2eb 0%, #ede4d8 100%);
@@ -57,31 +57,33 @@ body {
 ═══════════════════════════════════════ */
 .cabecalho {
   position: relative;
-  background: var(--grad-cab);
+  background: linear-gradient(150deg, #f5d48a 0%, #e8b55a 25%, #d49a3a 55%, #c48830 80%, #b87820 100%);
   overflow: hidden;
   padding: 0;
-  border-bottom: 2px solid rgba(240,192,96,.25);
+  border-bottom: 2px solid rgba(160,100,20,.18);
 }
 
+/* Camada de suavização/profundidade */
 .cab-bg-layer1 {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 120% at 50% -10%, rgba(200,149,58,.18) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 60% at 15% 50%,  rgba(90,48,16,.6)    0%, transparent 60%),
-    radial-gradient(ellipse 40% 60% at 85% 50%,  rgba(90,48,16,.6)    0%, transparent 60%);
+    radial-gradient(ellipse 70% 80% at 50% 0%,  rgba(255,240,180,.35) 0%, transparent 65%),
+    radial-gradient(ellipse 30% 50% at 0%   50%, rgba(140,80,10,.20)  0%, transparent 60%),
+    radial-gradient(ellipse 30% 50% at 100% 50%, rgba(140,80,10,.20)  0%, transparent 60%);
 }
 
 .cab-bg-layer2 {
   position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255,224,140,.10) 0%, transparent 70%);
+  background: radial-gradient(ellipse 50% 30% at 50% 100%, rgba(120,60,0,.12) 0%, transparent 70%);
 }
 
 .cab-grain {
-  position: absolute; inset: 0; pointer-events: none; opacity: .04;
+  position: absolute; inset: 0; pointer-events: none; opacity: .035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-size: 180px;
 }
 
+/* ── Layout interno ── */
 .cab-inner {
   position: relative; z-index: 2;
   max-width: 1400px; margin: 0 auto;
@@ -89,88 +91,78 @@ body {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 28px;
+  gap: 24px;
 }
 
-/* ── Logo ── */
+/* ── Logo — sem bolinha, diretamente ── */
 .cab-logo-wrap { perspective: 600px; }
 
 .cab-logo-3d {
   position: relative;
   width: 110px; height: 110px;
   transform-style: preserve-3d;
-  transform: rotateY(-6deg) rotateX(3deg);
+  transform: rotateY(-4deg) rotateX(2deg);
   transition: transform .5s ease;
 }
 .cab-logo-3d:hover { transform: rotateY(0deg) rotateX(0deg); }
 
-/* Círculo branco chapado por trás da logo */
 .cab-logo-circulo {
   width: 110px; height: 110px;
-  border-radius: 50%;
-  background: #ffffff;
+  border-radius: 12px;
+  background: transparent;
   display: flex; align-items: center; justify-content: center;
-  box-shadow:
-    0 0 0 3px rgba(240,192,96,.5),
-    0 8px 28px rgba(0,0,0,.55);
   overflow: hidden;
 }
 
 .cab-logo-img {
-  width: 90px; height: 90px;
+  width: 110px; height: 110px;
   object-fit: contain;
   display: block;
+  filter: drop-shadow(0 3px 10px rgba(80,40,0,.35));
 }
 
-.cab-logo-reflexo {
-  position: absolute;
-  bottom: -10px; left: 10px; right: 10px; height: 12px;
-  background: radial-gradient(ellipse at center, rgba(240,192,96,.3) 0%, transparent 70%);
-  transform: rotateX(60deg) scaleY(0.5);
-  filter: blur(3px);
-  pointer-events: none;
-}
+.cab-logo-reflexo { display: none; }
 
 /* ── Centro ── */
 .cab-centro {
   text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
 
 .cab-titulo {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(30px, 4vw, 52px);
+  font-size: clamp(28px, 4vw, 52px);
   font-weight: 900;
   line-height: 1;
-  letter-spacing: .02em;
-  background: linear-gradient(180deg, #ffe8a0 0%, #f0c060 35%, #c8953a 65%, #ffe8a0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 2px 0px rgba(80,40,0,.8)) drop-shadow(0 4px 8px rgba(0,0,0,.5));
+  letter-spacing: .03em;
+  color: #3a1f00;
+  text-shadow:
+    0 1px 0 rgba(255,220,120,.7),
+    0 3px 10px rgba(100,50,0,.25);
 }
 
 .cab-subtitulo {
   font-family: 'Questrial', sans-serif;
-  font-size: clamp(12px, 1.6vw, 17px);
-  letter-spacing: .28em;
+  font-size: clamp(11px, 1.4vw, 15px);
+  letter-spacing: .26em;
   text-transform: uppercase;
-  color: rgba(240,192,96,.65);
+  color: rgba(80,40,0,.6);
 }
 
 .cab-linha-ouro {
-  width: 140px; height: 1.5px;
-  background: var(--grad-ouro);
+  width: 120px; height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, rgba(100,50,0,.4) 30%, rgba(100,50,0,.6) 50%, rgba(100,50,0,.4) 70%, transparent 100%);
   border-radius: 999px;
-  margin: 4px auto 2px;
+  margin: 2px auto;
 }
 
 .cab-slogan {
-  font-size: 12.5px;
-  color: rgba(255,255,255,.35);
-  letter-spacing: .03em;
+  font-size: clamp(11px, 1.2vw, 13px);
+  color: rgba(60,30,0,.55);
+  letter-spacing: .02em;
   font-style: italic;
-  max-width: 420px;
+  max-width: 400px;
+  line-height: 1.5;
 }
 
 /* ── Contato ── */
@@ -180,18 +172,19 @@ body {
 
 .cab-tel {
   display: flex; align-items: center; gap: 7px;
-  color: rgba(255,255,255,.52); text-decoration: none;
+  color: rgba(60,30,0,.6); text-decoration: none;
   font-size: 13px; transition: color var(--t);
 }
-.cab-tel:hover { color: #fff; }
+.cab-tel:hover { color: #3a1f00; }
 
 .cab-wpp {
   display: flex; align-items: center; gap: 7px;
   background: var(--verde-w); color: #fff; text-decoration: none;
-  padding: 8px 18px; border-radius: var(--raio);
+  padding: 9px 20px; border-radius: var(--raio);
   font-size: 13.5px; font-weight: 600;
   transition: opacity var(--t), transform var(--t);
-  box-shadow: 0 4px 16px rgba(37,211,102,.3);
+  box-shadow: 0 4px 16px rgba(37,211,102,.35);
+  white-space: nowrap;
 }
 .cab-wpp:hover { opacity: .9; transform: translateY(-1px); }
 
@@ -665,12 +658,25 @@ body {
 }
 
 @media (max-width: 700px) {
-  .cab-inner { grid-template-columns: auto 1fr; grid-template-rows: auto auto; gap: 14px 16px; padding: 16px; }
-  .cab-contato { grid-column: 1/-1; flex-direction: row; align-items: center; justify-content: center; }
-  .cab-logo-3d { width: 72px; height: 72px; }
-  .cab-logo-img { width: 72px; height: 72px; }
-  .cab-titulo { font-size: 26px; }
-  .cab-tel { display: none; }
+  .cab-inner {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    justify-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 20px 16px 18px;
+  }
+  .cab-logo-wrap { order: 1; }
+  .cab-centro    { order: 2; width: 100%; }
+  .cab-contato   { order: 3; flex-direction: row; align-items: center; justify-content: center; width: 100%; }
+  .cab-logo-3d   { width: 80px; height: 80px; }
+  .cab-logo-circulo { width: 80px; height: 80px; }
+  .cab-logo-img  { width: 80px; height: 80px; }
+  .cab-titulo    { font-size: 32px; }
+  .cab-subtitulo { font-size: 11px; letter-spacing: .2em; }
+  .cab-slogan    { font-size: 12px; }
+  .cab-tel       { display: none; }
+  .cab-linha-ouro { width: 90px; }
 }
 
 @media (max-width: 600px) {

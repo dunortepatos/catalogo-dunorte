@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Questrial&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Open Graph — miniatura ao compartilhar no WhatsApp -->
+  <meta property="og:title" content="Grupo Dunorte — Madeiras e Móveis">
+  <meta property="og:description" content="Catálogo de móveis de madeira maciça. Patos de Minas &amp; Campina Verde — MG">
+  <meta property="og:image" content="https://dunortepatos.github.io/catalogo-dunorte/assets/img/logo.png">
+  <meta property="og:url" content="https://dunortepatos.github.io/catalogo-dunorte/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
 </head>
 <body>
 
@@ -137,6 +144,10 @@
           <span id="contadorProdutos" class="contador">—</span>
         </div>
         <div class="barra-dir">
+          <button id="btnCopiarFiltro" class="btn-copiar-link" title="Copiar link com filtros atuais">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="btnCopiarFiltroTxt">Copiar link</span>
+          </button>
           <select id="ordenarProdutos" class="select-ordenar">
             <option value="recentes">Mais recentes</option>
             <option value="preco-menor">Menor preço</option>
@@ -171,6 +182,6 @@
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="script_github.js"></script>
 </body>
 </html>

@@ -682,3 +682,41 @@ body {
 @media (max-width: 380px) {
   .grid-produtos { grid-template-columns: 1fr; }
 }
+
+/* ── Botão copiar link (filtros e produto) ─────────────────── */
+.btn-copiar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--marrom2);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.btn-copiar-link:hover { background: var(--creme); border-color: var(--marrom-claro); color: var(--marrom); }
+.btn-copiar-link.copiado { background: #f0fdf4; border-color: #86efac; color: #166534; }
+
+.modal-btn-copiar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--marrom2);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.modal-btn-copiar:hover { background: var(--creme); border-color: var(--marrom-claro); color: var(--marrom); }
+.modal-btn-copiar.copiado { background: #f0fdf4; border-color: #86efac; color: #166534; }

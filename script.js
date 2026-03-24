@@ -90,6 +90,7 @@
     await Promise.all(todosOsProdutos.map((p) => verificarImagem(p.pasta)));
 
     construirFiltros();
+    lerUrlFiltros();
     renderizar();
   }
 
@@ -459,6 +460,10 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               Falar pelo WhatsApp
             </a>
+            <button class="modal-btn-copiar" id="btnCopiarProduto">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="btnCopiarProdutoTxt">Copiar link desta mesa</span>
+            </button>
           </div>
         </div>
       </div>`;
@@ -483,6 +488,15 @@
         descExpanded = !descExpanded;
         modalDesc.style.display = descExpanded ? "block" : "none";
         if (toggleIcon) toggleIcon.style.transform = descExpanded ? "rotate(180deg)" : "";
+      });
+    }
+
+    // Botão copiar link do produto
+    const btnCopiarProduto    = $("#btnCopiarProduto");
+    const btnCopiarProdutoTxt = $("#btnCopiarProdutoTxt");
+    if (btnCopiarProduto && btnCopiarProdutoTxt) {
+      btnCopiarProduto.addEventListener("click", () => {
+        copiarTexto(gerarUrlProduto(p), btnCopiarProduto, btnCopiarProdutoTxt, "✓ Copiado!");
       });
     }
   }
@@ -520,6 +534,114 @@
     if (el) el.addEventListener("input",  renderizar);
     if (el) el.addEventListener("change", renderizar);
   });
+
+  // ── URL: ler filtros ao abrir a página ────────────────────
+  function lerUrlFiltros() {
+    const params = new URLSearchParams(window.location.search);
+
+    ["categoria", "madeira", "tipoPe"].forEach((chave) => {
+      params.getAll(chave).forEach((v) => {
+        const cb = document.querySelector(`input[data-chave="${chave}"][value="${CSS.escape(v)}"]`);
+        if (cb) {
+          cb.checked = true;
+          if (chave === "tipoPe") {
+            const subsDiv = cb.closest(".pe-subs");
+            if (subsDiv) {
+              subsDiv.classList.add("visivel");
+              const mat  = subsDiv.id.replace("peSubs_", "");
+              const seta = document.querySelector(`.pe-principal[data-material="${mat}"] .pe-seta`);
+              if (seta) seta.style.transform = "rotate(90deg)";
+            }
+          }
+        }
+      });
+    });
+
+    if (params.get("promo") === "1" && filtroPromo) filtroPromo.checked = true;
+    if (params.get("busca") && buscaNome) buscaNome.value = params.get("busca");
+    if (params.get("ordem") && ordenarProdutos) ordenarProdutos.value = params.get("ordem");
+
+    ["precoMin","precoMax","comprimentoMin","comprimentoMax",
+     "larguraMin","larguraMax","espessuraMin","espessuraMax"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el && params.get(id)) el.value = params.get(id);
+    });
+
+    const idProduto = params.get("produto");
+    if (idProduto) {
+      const p = todosOsProdutos.find((x) => String(x.id) === String(idProduto));
+      if (p) abrirModal(p);
+    }
+  }
+
+  // ── URL: gerar link com filtros ativos ────────────────────
+  function gerarUrlFiltros() {
+    const base   = "https://dunortepatos.github.io/catalogo-dunorte/";
+    const params = new URLSearchParams();
+
+    getChecks("categoria").forEach((v) => params.append("categoria", v));
+    getChecks("madeira").forEach((v)   => params.append("madeira",   v));
+    getChecks("tipoPe").forEach((v)    => params.append("tipoPe",    v));
+    if (filtroPromo?.checked)           params.set("promo",  "1");
+    if (buscaNome?.value.trim())        params.set("busca",  buscaNome.value.trim());
+    if (ordenarProdutos?.value && ordenarProdutos.value !== "recentes")
+                                        params.set("ordem",  ordenarProdutos.value);
+
+    ["precoMin","precoMax","comprimentoMin","comprimentoMax",
+     "larguraMin","larguraMax","espessuraMin","espessuraMax"].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el?.value) params.set(id, el.value);
+    });
+
+    const qs = params.toString();
+    return qs ? base + "?" + qs : base;
+  }
+
+  // ── URL: gerar link de produto individual ─────────────────
+  function gerarUrlProduto(p) {
+    return `https://dunortepatos.github.io/catalogo-dunorte/?produto=${p.id}`;
+  }
+
+  // ── Copiar para área de transferência ─────────────────────
+  function copiarTexto(texto, btnEl, labelEl, msgOk) {
+    // Tenta navigator.clipboard (HTTPS), cai para execCommand (HTTP/local)
+    const fazer = () => {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(texto);
+      }
+      // fallback para localhost / HTTP
+      const ta = document.createElement("textarea");
+      ta.value = texto;
+      ta.style.cssText = "position:fixed;opacity:0;pointer-events:none;";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return Promise.resolve();
+    };
+
+    fazer().then(() => {
+      const original = labelEl.textContent;
+      labelEl.textContent = msgOk || "✓ Copiado!";
+      btnEl.classList.add("copiado");
+      setTimeout(() => {
+        labelEl.textContent = original;
+        btnEl.classList.remove("copiado");
+      }, 2200);
+    }).catch(() => {
+      // Se tudo falhar, abre prompt com o link para o usuário copiar manualmente
+      prompt("Copie o link abaixo:", texto);
+    });
+  }
+
+  // ── Botão copiar link dos filtros ─────────────────────────
+  const btnCopiarFiltro    = document.getElementById("btnCopiarFiltro");
+  const btnCopiarFiltroTxt = document.getElementById("btnCopiarFiltroTxt");
+  if (btnCopiarFiltro) {
+    btnCopiarFiltro.addEventListener("click", () => {
+      copiarTexto(gerarUrlFiltros(), btnCopiarFiltro, btnCopiarFiltroTxt, "✓ Copiado!");
+    });
+  }
 
   init();
 })();

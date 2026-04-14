@@ -285,9 +285,13 @@
     const sufixo = " - Cod. " + (p.codigo || "");
     const madeira = p.madeira || "";
 
+    // Em mobile (cards de 2 colunas, ~155px de texto, ~24 chars/linha, 2 linhas = 48 chars max):
+    // - prefixo fixo "Mesa de Madeira Maciça - " = 25 chars
+    // - sufixo " - Cod. XXXX" = ~12 chars
+    // - sobram ~11 chars para a madeira → abreviar se > 9 chars
     let madeiraExibida = madeira;
-    if (window.innerWidth < 480 && madeira.length > 18) {
-      madeiraExibida = madeira.slice(0, 15) + "...";
+    if (window.innerWidth < 640 && madeira.length > 9) {
+      madeiraExibida = madeira.slice(0, 6).trimEnd() + "...";
     }
 
     return "Mesa de Madeira Maciça - " + madeiraExibida + sufixo;

@@ -43,7 +43,7 @@
   --fonte: Calibri, 'Gill Sans MT', 'Trebuchet MS', Arial, sans-serif;
 }
 
-html { scroll-behavior: smooth; overflow-x: hidden; }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--fonte);
@@ -52,17 +52,6 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-  max-width: 100%;
-}
-
-img, svg, video, canvas, iframe { max-width: 100%; }
-
-/* Evita que grids/flex empurrem a largura no mobile */
-.pagina, .cab-inner, .barra-topo, .barra-esq, .barra-dir, .grid-produtos,
-.modal-grid, .modal-box, .sidebar, .range-duplo, .filtro-checks,
-.card, .card-body, .modal-info, .modal-desc {
-  min-width: 0;
 }
 
 /* ═══════════════════════════════════════
@@ -421,9 +410,8 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 .barra-topo {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 20px; gap: 12px;
-  flex-wrap: wrap;
 }
-.barra-esq { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.barra-esq { display: flex; align-items: center; gap: 11px; }
 
 .btn-toggle-filtros {
   display: none; align-items: center; gap: 7px;
@@ -436,14 +424,13 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 .btn-toggle-filtros:hover { border-color: var(--marrom2); }
 
 .contador { font-size: 13px; color: var(--muted); }
-.barra-dir { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.barra-dir { display: flex; align-items: center; gap: 10px; }
 
 .select-ordenar {
   height: 36px; border: 1.5px solid var(--bege); border-radius: var(--raio);
   background: var(--branco); padding: 0 30px 0 11px;
   font-size: 13px; font-family: var(--fonte); color: var(--texto);
   outline: none; cursor: pointer; appearance: none;
-  min-width: 0; max-width: 100%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a6a57' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
   transition: border-color var(--t);
@@ -455,9 +442,8 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 ═══════════════════════════════════════ */
 .grid-produtos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(235px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
   gap: 18px;
-  width: 100%;
 }
 
 .card {
@@ -554,7 +540,7 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 /* ═══════════════════════════════════════
    MODAL
 ═══════════════════════════════════════ */
-.modal { position: fixed; inset: 0; display: none; z-index: 1000; padding: 8px; overflow-x: hidden; }
+.modal { position: fixed; inset: 0; display: none; z-index: 1000; }
 .modal.aberto { display: flex; }
 
 .modal-overlay {
@@ -565,7 +551,7 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 
 .modal-box {
   position: relative; z-index: 1;
-  margin: auto; width: min(96%, 1040px); max-width: 1040px;
+  margin: auto; width: 96%; max-width: 1040px;
   max-height: 92vh; overflow-y: auto;
   background: linear-gradient(160deg, #fdfaf6 0%, #f7f0e6 100%);
   border-radius: var(--raio3); padding: 30px;
@@ -717,12 +703,8 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 @media (max-width: 900px) {
   .pagina { grid-template-columns: 1fr; padding: 18px 14px 44px; }
   .sidebar { position: static; max-height: none; display: none; }
-  .sidebar.visivel { display: block; width: 100%; }
+  .sidebar.visivel { display: block; }
   .btn-toggle-filtros { display: flex; }
-  .barra-topo { align-items: stretch; }
-  .barra-esq, .barra-dir { width: 100%; }
-  .barra-dir { justify-content: space-between; }
-  .select-ordenar { flex: 1 1 220px; }
   .modal-grid { grid-template-columns: 1fr; }
   .modal-box { padding: 22px; }
   .modal-nome { font-size: 19px; }
@@ -740,7 +722,7 @@ img, svg, video, canvas, iframe { max-width: 100%; }
   }
   .cab-logo-wrap { order: 1; }
   .cab-centro    { order: 2; width: 100%; }
-  .cab-contato   { order: 3; flex-direction: row; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap; gap: 8px; }
+  .cab-contato   { order: 3; flex-direction: row; align-items: center; justify-content: center; width: 100%; }
   .cab-logo-3d   { width: 78px; height: 78px; }
   .cab-logo-circulo { width: 78px; height: 78px; }
   .cab-logo-img  { width: 78px; height: 78px; }
@@ -752,34 +734,25 @@ img, svg, video, canvas, iframe { max-width: 100%; }
 }
 
 @media (max-width: 600px) {
-  .busca-principal-wrap { margin-bottom: 14px; }
-  .barra-topo { gap: 10px; }
-  .barra-esq, .barra-dir { flex-direction: column; align-items: stretch; gap: 10px; }
-  .btn-toggle-filtros, .btn-copiar-link, .select-ordenar { width: 100%; justify-content: center; }
-  .contador { text-align: center; }
-  .grid-produtos { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
-  .card-body { padding: 12px 12px 14px; }
-  .card-nome { font-size: 13.5px; }
-  .card-specs { font-size: 11px; }
-  .modal-box { width: calc(100vw - 16px); max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 16px 13px; border-radius: var(--raio2); }
-  .modal-miniaturas { gap: 6px; }
-  .modal-miniaturas button { width: 58px; height: 58px; }
+  .grid-produtos { grid-template-columns: repeat(2, 1fr); gap: 11px; }
+  .modal-box { padding: 16px 13px; border-radius: var(--raio2); }
   .specs-grid { grid-template-columns: 1fr; gap: 7px; }
+  .card-nome { -webkit-line-clamp: 3; line-clamp: 3; }
 }
 
 @media (max-width: 380px) {
   .grid-produtos { grid-template-columns: 1fr; }
+  .card-nome { -webkit-line-clamp: 2; line-clamp: 2; }
 }
 
 /* ── Botão copiar link (filtros e produto) ─────────────────── */
 .btn-copiar-link {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 6px;
   padding: 6px 13px;
   background: #fff;
-  border: 1px solid var(--bege2);
+  border: 1px solid var(--borda);
   border-radius: 7px;
   font-size: 13px;
   font-weight: 600;
@@ -787,10 +760,8 @@ img, svg, video, canvas, iframe { max-width: 100%; }
   cursor: pointer;
   transition: background .15s, border-color .15s, color .15s;
   white-space: nowrap;
-  min-width: 0;
-  max-width: 100%;
 }
-.btn-copiar-link:hover { background: var(--bg2); border-color: var(--marrom1); color: var(--marrom3); }
+.btn-copiar-link:hover { background: var(--creme); border-color: var(--marrom-claro); color: var(--marrom); }
 .btn-copiar-link.copiado { background: #f0fdf4; border-color: #86efac; color: #166534; }
 
 .modal-btn-copiar {
@@ -801,14 +772,13 @@ img, svg, video, canvas, iframe { max-width: 100%; }
   width: 100%;
   padding: 11px;
   background: #fff;
-  border: 1px solid var(--bege2);
+  border: 1px solid var(--borda);
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   color: var(--marrom2);
   cursor: pointer;
   transition: background .15s, border-color .15s, color .15s;
-  min-width: 0;
 }
 .modal-btn-copiar:hover { background: var(--creme); border-color: var(--marrom-claro); color: var(--marrom); }
 .modal-btn-copiar.copiado { background: #f0fdf4; border-color: #86efac; color: #166534; }

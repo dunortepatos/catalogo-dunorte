@@ -278,6 +278,21 @@
     return [...comFoto.sort(sortFn), ...semFoto.sort(sortFn)];
   }
 
+  // ── Montar nome do produto ─────────────────────────────────
+  // Em mobile, abrevia a madeira se necessário para garantir que
+  // "Cod. XXXX" nunca seja cortado pelo line-clamp.
+  function montarNome(p) {
+    const sufixo = " - Cod. " + (p.codigo || "");
+    const madeira = p.madeira || "";
+
+    let madeiraExibida = madeira;
+    if (window.innerWidth < 480 && madeira.length > 18) {
+      madeiraExibida = madeira.slice(0, 15) + "...";
+    }
+
+    return "Mesa de Madeira Maciça - " + madeiraExibida + sufixo;
+  }
+
   // ── Render cards ───────────────────────────────────────────
   function renderizar() {
     const lista = ordenar(filtrarProdutos());
@@ -320,7 +335,7 @@
         </div>
         <div class="card-body">
           <div class="card-madeira">${p.madeira}</div>
-          <div class="card-nome">${p.nome}</div>
+          <div class="card-nome">${montarNome(p)}</div>
           <div class="card-specs">${p.comprimento} × ${p.largura} cm &bull; ${p.espessura} cm &bull; Pé ${p.tipoPe}</div>
           <div class="card-preco-bloco">
             ${temPromo ? `<div class="card-preco-antigo">${fmt.preco(p.preco)}</div>` : ""}

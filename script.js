@@ -37,6 +37,7 @@
   let imagensModal = [];
   let indiceAtual = 0;
   let descExpanded = false;
+  let paginaAtual = 1;
 
   // Cache de verificação de imagens (pasta => true/false)
   const cacheImagem = {};
@@ -51,6 +52,7 @@
   const buscaNome       = $("#buscaNome");
   const ordenarProdutos = $("#ordenarProdutos");
   const filtroPromo     = $("#filtroPromo");
+  const btnSobre        = $("#btnSobre");
 
   // ── Sidebar toggle (mobile) ───────────────────────────────
   window.toggleSidebar = function () {
@@ -246,13 +248,19 @@
     });
   }
 
-  // ── Ordenar (com foto primeiro) ────────────────────────────
+  // ── Ordenar (destacados primeiro, depois com foto, depois sem foto) ──
   function ordenar(lista) {
     const modo = ordenarProdutos?.value || "recentes";
 
-    // Separa com foto e sem foto
-    const comFoto  = lista.filter((p) => cacheImagem[p.pasta] === true);
-    const semFoto  = lista.filter((p) => cacheImagem[p.pasta] !== true);
+    // Destacados aparecem primeiro, em ordem aleatória entre si
+    const destacados = lista.filter((p) => p.destaque);
+    const normais    = lista.filter((p) => !p.destaque);
+
+    const destacadosOrdenados = destacados.sort(() => 0.5 - Math.random());
+
+    // Normais: separa com foto e sem foto
+    const comFoto = normais.filter((p) => cacheImagem[p.pasta] === true);
+    const semFoto = normais.filter((p) => cacheImagem[p.pasta] !== true);
 
     function sortFn(a, b) {
       if (modo === "recentes")    return Number(b.id) - Number(a.id);
@@ -266,16 +274,15 @@
       return 0;
     }
 
-    // Dentro de cada grupo, ordena aleatoriamente quando modo = "recentes"
-    // (mantém id desc como critério secundário estável, mas embaralha ligeiramente)
-    // Conforme solicitado: com foto aparece em ordem aleatória, sem foto vai por último
+    let normaisOrdenados;
     if (modo === "recentes") {
-      // Aleatoriza os com foto
       const shuffled = comFoto.sort(() => 0.5 - Math.random());
-      return [...shuffled, ...semFoto];
+      normaisOrdenados = [...shuffled, ...semFoto];
+    } else {
+      normaisOrdenados = [...comFoto.sort(sortFn), ...semFoto.sort(sortFn)];
     }
 
-    return [...comFoto.sort(sortFn), ...semFoto.sort(sortFn)];
+    return [...destacadosOrdenados, ...normaisOrdenados];
   }
 
   // ── Montar nome do produto ─────────────────────────────────
@@ -297,27 +304,87 @@
     return "Mesa de Madeira Maciça - " + madeiraExibida + sufixo;
   }
 
-  // ── Render cards ───────────────────────────────────────────
-  function renderizar() {
-    const lista = ordenar(filtrarProdutos());
-    contador.textContent = `${lista.length} produto${lista.length !== 1 ? "s" : ""}`;
+  // ── Itens por página conforme tamanho de tela ─────────────
+  function itensPorPagina() {
+    if (window.innerWidth < 600) return 8;
+    if (window.innerWidth < 900) return 12;
+    return 16;
+  }
 
-    if (!lista.length) {
+  // ── Scroll até o topo do grid ──────────────────────────────
+  function scrollToGrid() {
+    const grid = document.getElementById("listaProdutos");
+    if (!grid) return;
+    const y = grid.getBoundingClientRect().top + window.scrollY - 90;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }
+
+  // ── Renderizar cards (reseta página 1 ao mudar filtros) ────
+  function renderizar() {
+    paginaAtual = 1;
+    exibirPagina();
+  }
+
+  // ── Exibir página atual ────────────────────────────────────
+  function exibirPagina() {
+    const lista = ordenar(filtrarProdutos());
+    const total = lista.length;
+    const ppg   = itensPorPagina();
+    const totalPags = Math.max(1, Math.ceil(total / ppg));
+
+    if (paginaAtual > totalPags) paginaAtual = totalPags;
+    if (paginaAtual < 1)         paginaAtual = 1;
+
+    contador.textContent = `${total} produto${total !== 1 ? "s" : ""}`;
+
+    if (!total) {
       listaProdutos.innerHTML = `
         <div class="sem-resultados">
           <p>Nenhum produto encontrado</p>
           <p style="font-size:14px;">Tente ajustar os filtros.</p>
         </div>`;
+      atualizarPaginacao(0, 0);
       return;
     }
 
-    listaProdutos.innerHTML = lista.map(cardHTML).join("");
+    const inicio = (paginaAtual - 1) * ppg;
+    const slice  = lista.slice(inicio, inicio + ppg);
+
+    listaProdutos.innerHTML = slice.map(cardHTML).join("");
 
     $$(".card").forEach((card, i) => {
       card.addEventListener("click", (e) => {
         if (e.target.tagName === "A") return;
-        abrirModal(lista[i]);
+        abrirModal(slice[i]);
       });
+    });
+
+    atualizarPaginacao(paginaAtual, totalPags);
+  }
+
+  // ── Atualizar controles de paginação ───────────────────────
+  function atualizarPaginacao(pagAtual, totalPags) {
+    const pagDiv = document.getElementById("paginacao");
+    if (!pagDiv) return;
+
+    if (totalPags <= 1) { pagDiv.innerHTML = ""; return; }
+
+    pagDiv.innerHTML = `
+      <button class="btn-pag btn-pag-ant" ${pagAtual <= 1 ? "disabled" : ""}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Anterior
+      </button>
+      <span class="pag-info">Página <strong>${pagAtual}</strong> de <strong>${totalPags}</strong></span>
+      <button class="btn-pag btn-pag-prox" ${pagAtual >= totalPags ? "disabled" : ""}>
+        Próxima
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>`;
+
+    pagDiv.querySelector(".btn-pag-ant")?.addEventListener("click", () => {
+      if (paginaAtual > 1) { paginaAtual--; exibirPagina(); scrollToGrid(); }
+    });
+    pagDiv.querySelector(".btn-pag-prox")?.addEventListener("click", () => {
+      if (paginaAtual < totalPags) { paginaAtual++; exibirPagina(); scrollToGrid(); }
     });
   }
 
@@ -340,7 +407,7 @@
         <div class="card-body">
           <div class="card-madeira">${p.madeira}</div>
           <div class="card-nome">${montarNome(p)}</div>
-          <div class="card-specs">${p.comprimento} × ${p.largura} cm &bull; ${p.espessura} cm &bull; Pé ${p.tipoPe}</div>
+          <div class="card-specs">${p.comprimento} × ${p.largura} cm &bull; Esp. ${p.espessura} cm</div>
           <div class="card-preco-bloco">
             ${temPromo ? `<div class="card-preco-antigo">${fmt.preco(p.preco)}</div>` : ""}
             <div class="card-preco-atual${temPromo ? " promo" : ""}">${fmt.preco(precoExibido)}</div>
@@ -529,6 +596,12 @@
     modal.classList.remove("aberto");
     document.body.style.overflow = "";
   }
+
+  btnSobre?.addEventListener("click", () => {
+    modalConteudo.innerHTML = '<div class="modal-sobre">Em construção</div>';
+    modal.classList.add("aberto");
+    document.body.style.overflow = "hidden";
+  });
 
   fecharModal?.addEventListener("click", fecharModalFn);
   modalOverlay?.addEventListener("click", fecharModalFn);
